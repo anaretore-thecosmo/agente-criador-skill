@@ -257,7 +257,7 @@ const tagsQuestions = [
   },
 ];
 
-const callClaude = (responses) => {
+const callClaudeVPS = (responses) => {
   return new Promise((resolve, reject) => {
     const prompt = `Você é um estrategista de Skills e arquiteto de sistemas.
 
@@ -319,26 +319,17 @@ MCP: Integrations com serviços externos
 
 Nome tem que COMUNICAR a missão. Não é técnico, é estratégico.`;
 
-    const payload = JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 3000,
-      messages: [{ role: "user", content: prompt }],
-    });
+    const payload = JSON.stringify({ prompt: prompt });
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      reject(new Error("ANTHROPIC_API_KEY não configurada"));
-      return;
-    }
+    
 
     const options = {
-      hostname: "api.anthropic.com",
-      port: 443,
-      path: "/v1/messages",
+      hostname: "72.60.55.50",
+      port: 3000,
+      path: "/api/agente-criador-skill",
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
         "Content-Length": Buffer.byteLength(payload),
       },
     };
@@ -353,7 +344,7 @@ Nome tem que COMUNICAR a missão. Não é técnico, é estratégico.`;
           const response = JSON.parse(data);
           if (response.error)
             reject(new Error(`API: ${response.error.message}`));
-          resolve(JSON.parse(response.content[0].text));
+          resolve(JSON.parse(response.result || response));
         } catch (err) {
           reject(new Error(`Parse: ${err.message}`));
         }
@@ -794,7 +785,7 @@ const loadBatchConfig = (filePath) => {
     console.log(`⏳ Analisando missão...\n`);
 
     try {
-      const skillData = await callClaude(config);
+      const skillData = await callClaudeVPS(config);
       const skillDir = createSkill(skillData, {
         tags: config.tags,
         projectName: config.projectName,
@@ -852,7 +843,7 @@ const loadBatchConfig = (filePath) => {
         console.log(`\n⏳ Carregando: ${cached.name}...\n`);
 
         try {
-          const skillData = await callClaude(cached.responses);
+          const skillData = await callClaudeVPS(cached.responses);
           const skillDir = createSkill(skillData);
 
           console.log(`\n✅ SKILL CRIADA COM SUCESSO!\n`);
@@ -900,7 +891,7 @@ const loadBatchConfig = (filePath) => {
   console.log("\n⏳ Analisando sua MISSÃO e escolhendo arquitetura...\n");
 
   try {
-    const skillData = await callClaude(responses);
+    const skillData = await callClaudeVPS(responses);
     const skillDir = createSkill(skillData, customMetadata);
 
     // Salvar no cache
